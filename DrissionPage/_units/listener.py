@@ -692,7 +692,7 @@ class Request(object):
 
     @property
     def timestamp(self):
-        return self._request['timestamp']
+        return self._data_packet._raw_request['timestamp']
 
 
 class Response(object):

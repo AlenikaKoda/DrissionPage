@@ -1,11 +1,14 @@
 # ✨️ 概述
 
-[![DrissionPage tests verification](https://github.com/g1879/DrissionPage/actions/workflows/drissionpage-tests.yml/badge.svg)](https://github.com/g1879/DrissionPage/actions/workflows/drissionpage-tests.yml)
-[![codecov](https://codecov.io/gh/g1879/DrissionPage/graph/badge.svg?token=8YHOB3Ieuw)](https://codecov.io/gh/g1879/DrissionPage)
+DrissionPage 是一个基于 python 的网页自动化工具。
 
-DrissionPage 是一个基于 Python 的网页自动化工具。
+它既能控制浏览器，也能收发数据包，还能把两者合而为一。
 
-简洁优雅，功能强大。
+可兼顾浏览器自动化的便利性和 requests 的高效率。
+
+它功能强大，内置无数人性化设计和便捷功能。
+
+它的语法简洁而优雅，代码量少，对新手友好。
 
 官方网站：[https://DrissionPage.cn](https://drissionpage.cn)
 
@@ -13,51 +16,18 @@ DrissionPage 是一个基于 Python 的网页自动化工具。
 
 您的星星是对我最大的支持💖
 
----
-
-# ♾️ 交流群
-
-![](https://drissionpage.cn/img/yrx2.png)
-
-与猿人学平哥建立的 DrissionPage AI 逆向微信交流群。  
-扫码并备注 “dp” 即可申请加入。  
-交流 AI 逆向，dp 使用方法、实践案例，以及后续功能更新，欢迎加入。
-
----
-
-## IPWO爬虫代理资源为采集、跨境与测试项目提供支持(免费试用，爬虫使用强烈推荐!!!)
-
-<a href="https://www.ipwo.net/?ref=giteeg1879" target="_blank"><img src="https://drissionpage.cn/img/ipwo.png"/></a>
-<a href="https://www.ipwo.net/?ref=giteeg1879" target="_blank">IPWO 提供全球多个地区的住宅代理 IP，为网页自动化和数据采集项目提供代理网络选择。
-<br/>
-对于使用 DrissionPage 的开发者，可根据任务需求配置不同地区的代理，用于网页访问、跨境数据采集、市场调研及自动化测试等场景。点击访问IPWO官网</a>
-
 --- 
 
-# 🛠 运行环境
+> <a href="https://www.ipwo.net/?ref=giteeg1879" target="_blank"><img src="https://drissionpage.cn/img/ipwo.png"/></a>
+> <a href="https://www.ipwo.net/?ref=giteeg1879" target="_blank">IPWO 提供全球多个地区的住宅代理 IP，为网页自动化和数据采集项目提供代理网络选择。</a>  
+> <a href="https://www.ipwo.net/?ref=giteeg1879" target="_blank">对于使用 DrissionPage 的开发者，可根据任务需求配置不同地区的代理，用于网页访问、跨境数据采集、市场调研及自动化测试等场景。</a>
 
-支持系统：Windows、Linux、Mac
+> <a href="https://mangoproxy.com/?utm_source=drissionpage&utm_medium=partner&utm_campaign=drissionpage_github"><img src="https://drissionpage.cn/img/MangoProxy.png"/></a>
+> <a href="https://mangoproxy.com/?utm_source=drissionpage&utm_medium=partner&utm_campaign=drissionpage_github">MangoProxy is a Residential, ISP, Mobile, and Datacenter proxy service designed for professional tasks where stability, speed, and anonymity matter.</a>  
+> <a href="https://mangoproxy.com/?utm_source=drissionpage&utm_medium=partner&utm_campaign=drissionpage_github">DRISSION - 8% off Static ISP Proxies</a>
 
-python 版本：3.6 及以上
-
-支持浏览器：Chromium 内核浏览器(如 Chrome 和 Edge)，electron 应用
-
----
-
-# 🛠 如何使用
-
-点击查看：[教程]([https://drissionpage.cn/codes.png](https://drissionpage.cn/tutorials/xingqiu)
-
----
-
-## DolOffer
-
-<img src="https://drissionpage.cn/img/doloffer.png" alt="DolOffer" width=300/>
-
-感谢 DolOffer 对本项目的支持！DolOffer 是一个专注于数字产品推荐与优惠分享的平台，帮助用户快速发现值得关注的工具、服务和限时福利。平台提供 YouTube Premium、Claude、ChatGPT Plus、Spotify、Apple Music 等多种热门订阅服务，价格低至官方价的 3 折甚至更低，正版稳定，售后无忧。
-现在通过我们的专属链接注册，并在充值时输入优惠码 AI8888，即可额外享受 9 折优惠。
-
-点击查看：<a href="https://doloffer.com/" target="_blank" >🔸官网</a> <a href="https://github.com/Doloffer-g/guide" target="_blank" >🔸详细介绍</a>
+> <a href="https://sx.org/c/drisson" target="_blank"><img src="https://drissionpage.cn/img/sxorg.jpg"/></a>
+> <a href="https://sx.org/c/drisson" target="_blank">SX.org 完美适用于数据爬取、自动化与程序开发，保障连接稳定与安全。所有新用户均可享受 3GB 免费试用。提供 24/7 全天候技术支持。</a>
 
 ---
 
@@ -102,16 +72,6 @@ python 版本：3.6 及以上
 
 --- 
 
-# ☕ 请我喝咖啡
-
-作者是个人开发者，开发和写文档工作量较为繁重。
-
-如果本项目对您有所帮助，不妨打赏一下作者 ：）
-
-![](https://drissionpage.cn/img/code.jpg)
-
----  
-
 # 📝 使用条款
 
 允许任何人以个人身份使用或分发本项目源代码，但仅限于学习和合法非盈利目的。
@@ -127,3 +87,13 @@ python 版本：3.6 及以上
 因使用DrissionPage进行任何行为所产生的一切纠纷及后果均与版权持有人无关，
 版权持有人不承担任何使用DrissionPage带来的风险和损失。
 版权持有人不对DrissionPage可能存在的缺陷导致的任何损失负任何责任。
+
+---  
+
+# ☕ 请我喝咖啡
+
+作者是个人开发者，开发和写文档工作量较为繁重。
+
+如果本项目对您有所帮助，不妨打赏一下作者 ：）
+
+![](https://drissionpage.cn/img/code.jpg)

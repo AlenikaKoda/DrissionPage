@@ -465,6 +465,7 @@ class ChromiumBase(BasePage, Messenger):
         self.wait.doc_loaded()
 
         if mode == 'ax':
+            self._enable_domain('Accessibility')
             bid = self._run_cdp('Accessibility.getRootAXNode', frameId=self._frame_id)['node']['backendDOMNodeId']
             return find_by_ax(self, bid, loc, index, timeout)
         elif mode == 'any':

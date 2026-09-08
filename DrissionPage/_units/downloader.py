@@ -279,8 +279,6 @@ class DownloadMission(object):
                 sleep(0.01)
             print(f'{_S._lang.FILE_NAME}: {self.name or _S._lang.UNKNOWN}')
             print(f'{_S._lang.FOLDER_PATH}: {self.folder}')
-            if timeout is not None:
-                timeout = max(1, timeout - perf_counter())
 
         r = wait_until(do, timeout=timeout, gap=.2)
         if r is None and not self.is_done and cancel_if_timeout:

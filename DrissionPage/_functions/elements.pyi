@@ -5,7 +5,7 @@
 @Website  : https://DrissionPage.cn
 @Copyright: (c) 2020 by g1879, Inc. All Rights Reserved.
 """
-from typing import Union, List, Optional, Iterable, Dict, Any
+from typing import Union, List, Iterable, Dict
 
 from .._base.base import BaseParser
 from .._elements.chromium_element import ChromiumElement
@@ -29,12 +29,12 @@ class SessionElementsList(list):
 
     def __next__(self) -> SessionElement: ...
 
-    def __getitem__(self, item: Any) -> Union[SessionElement, SessionElementsList]: ...
+    def __getitem__(self, item: Union[int, slice]) -> Union[SessionElement, SessionElementsList]: ...
 
     def __iter__(self) -> List[SessionElement]: ...
 
     @property
-    def get(self) -> Getter:
+    def vals(self) -> Getter:
         """返回用于属性的对象"""
         ...
 
@@ -46,11 +46,6 @@ class SessionElementsList(list):
     @property
     def filter_one(self) -> SessionFilterOne:
         """用于筛选单个元素的对象"""
-        ...
-
-    @property
-    def texts(self) -> List[str]:
-        """返回列表中所有元素文本组成的列表"""
         ...
 
 
@@ -82,56 +77,9 @@ class ChromiumElementsList(SessionElementsList):
         """用于筛选单个元素的对象"""
         ...
 
-    def search(self,
-               displayed: Optional[bool] = None,
-               checked: Optional[bool] = None,
-               selected: Optional[bool] = None,
-               enabled: Optional[bool] = None,
-               clickable: Optional[bool] = None,
-               have_rect: Optional[bool] = None,
-               have_text: Optional[bool] = None,
-               tag: str = None) -> ChromiumFilter:
-        """或关系筛选元素
-        :param displayed: 是否显示，bool，None为忽略该项
-        :param checked: 是否被选中，bool，None为忽略该项
-        :param selected: 是否被选择，bool，None为忽略该项
-        :param enabled: 是否可用，bool，None为忽略该项
-        :param clickable: 是否可点击，bool，None为忽略该项
-        :param have_rect: 是否拥有大小和位置，bool，None为忽略该项
-        :param have_text: 是否含有文本，bool，None为忽略该项
-        :param tag: 指定的元素类型
-        :return: 筛选结果
-        """
-        ...
-
-    def search_one(self,
-                   index: int = 1,
-                   displayed: Optional[bool] = None,
-                   checked: Optional[bool] = None,
-                   selected: Optional[bool] = None,
-                   enabled: Optional[bool] = None,
-                   clickable: Optional[bool] = None,
-                   have_rect: Optional[bool] = None,
-                   have_text: Optional[bool] = None,
-                   tag: str = None) -> ChromiumElement:
-        """或关系筛选元素，获取一个结果
-        :param index: 元素序号，从1开始
-        :param displayed: 是否显示，bool，None为忽略该项
-        :param checked: 是否被选中，bool，None为忽略该项
-        :param selected: 是否被选择，bool，None为忽略该项
-        :param enabled: 是否可用，bool，None为忽略该项
-        :param clickable: 是否可点击，bool，None为忽略该项
-        :param have_rect: 是否拥有大小和位置，bool，None为忽略该项
-        :param have_text: 是否含有文本，bool，None为忽略该项
-        :param tag: 指定的元素类型
-        :return: 筛选结果
-        """
-        ...
-
 
 class SessionFilterOne(object):
     _list: SessionElementsList = ...
-    _index: int = ...
 
     def __init__(self, _list: SessionElementsList):
         """
@@ -139,54 +87,81 @@ class SessionFilterOne(object):
         """
         ...
 
-    def __call__(self, index: int = 1) -> SessionFilterOne:
-        """返回结果中第几个元素
-        :param index: 元素序号，从1开始
-        :return: 对象自身
+    def __call__(self, tag: Union[str, Ellipsis] = ..., contain_text: Union[str, Ellipsis] = ...,
+                 text_is: Union[str, Ellipsis] = ..., equal: bool = True, index: int = 1, **kwargs) -> SessionElement:
+        """或关系筛选元素
+        :param tag: 元素类型，...为忽略该项
+        :param contain_text: 包含文本，...为忽略该项
+        :param text_is: 文本是，...为忽略该项
+        :param equal: 匹配还是忽略指定条件
+        :param index: 获取第几个元素，从1开始
+        :return: 元素对象
         """
         ...
 
-    def tag(self, name: str, equal: bool = True) -> SessionElement:
+    def any_of(self, tag: Union[str, Ellipsis] = ..., contain_text: Union[str, Ellipsis] = ...,
+               text_is: Union[str, Ellipsis] = ..., equal: bool = True, index: int = 1, **kwargs) -> SessionElement:
+        """或关系筛选元素
+        :param tag: 元素类型，...为忽略该项
+        :param contain_text: 包含文本，...为忽略该项
+        :param text_is: 文本是，...为忽略该项
+        :param equal: 匹配还是忽略指定条件
+        :param index: 获取第几个元素，从1开始
+        :return: 元素对象
+        """
+        ...
+
+    def tag(self, name: str, equal: bool = True, index: int = 1) -> SessionElement:
         """筛选某种元素
         :param name: 标签页名称
         :param equal: True表示匹配这种元素，False表示匹配非这种元素
+        :param index: 获取结果中第几个元素，1开始
         :return: 筛选结果
         """
         ...
 
-    def attr(self, name: str, value: str, equal: bool = True) -> SessionElement:
+    def attr(self, name: str, value: str, equal: bool = True, index: int = 1) -> SessionElement:
         """以是否拥有某个attribute值为条件筛选元素
         :param name: 属性名称
         :param value: 属性值
         :param equal: True表示匹配name值为value值的元素，False表示匹配name值不为value值的
+        :param index: 获取结果中第几个元素，1开始
         :return: 筛选结果
         """
         ...
 
-    def text(self, text: str, fuzzy: bool = True, contain: bool = True) -> SessionElement:
+    def text(self, text: str, fuzzy: bool = True, contain: bool = True, index: int = 1) -> SessionElement:
         """以是否含有指定文本为条件筛选元素
         :param text: 用于匹配的文本
         :param fuzzy: 是否模糊匹配
         :param contain: 是否包含该字符串，False表示不包含
+        :param index: 获取结果中第几个元素，1开始
         :return: 筛选结果
         """
         ...
 
-    def _get_attr(self,
-                  name: str,
-                  value: str,
-                  method: str,
-                  equal: bool = True) -> SessionElement:
+    def _get_attr(self, name: str, value: str,
+                  method: str, equal: bool = True, index: int = 1) -> SessionElement:
         """返回通过某个方法可获得某个值的元素
         :param name: 属性名称
         :param value: 属性值
         :param method: 方法名称
+        :param equal: True表示匹配，False表示排除
+        :param index: 获取结果中第几个元素，1开始
         :return: 筛选结果
         """
         ...
 
 
-class SessionFilter(SessionFilterOne):
+class SessionFilter(object):
+    _LIST_CLASS = ...
+    _list: SessionElementsList = ...
+
+    def __init__(self, _list: SessionElementsList):
+        """
+        :param _list: 元素列表对象
+        """
+        ...
 
     def __iter__(self) -> Iterable[SessionElement]: ...
 
@@ -194,10 +169,34 @@ class SessionFilter(SessionFilterOne):
 
     def __len__(self) -> int: ...
 
-    def __getitem__(self, item: int) -> SessionElement: ...
+    def __getitem__(self, item: Union[int, slice]) -> Union[SessionElement, SessionFilter]: ...
+
+    def __call__(self, tag: str = ..., contain_text: str = ..., text_is: str = ..., equal: bool = True,
+                 index: int = ..., **kwargs) -> Union[SessionElement, SessionFilter]:
+        """或关系筛选元素
+        :param tag: 元素类型，...为忽略该项
+        :param contain_text: 包含文本，...为忽略该项
+        :param text_is: 文本是，...为忽略该项
+        :param equal: 匹配还是忽略指定条件
+        :param index: 获取第几个元素，从1开始，非int时返回所有元素组成的列表
+        :return: index为int时返回元素对象，否则返回元素列表
+        """
+        ...
+
+    def any_of(self, tag: str = ..., contain_text: str = ..., text_is: str = ..., equal: bool = True,
+               index: int = ..., **kwargs) -> Union[SessionElement, SessionFilter]:
+        """或关系筛选元素
+        :param tag: 元素类型，...为忽略该项
+        :param contain_text: 包含文本，...为忽略该项
+        :param text_is: 文本是，...为忽略该项
+        :param equal: 匹配还是忽略指定条件
+        :param index: 获取第几个元素，从1开始，非int时返回所有元素组成的列表
+        :return: index为int时返回元素对象，否则返回元素列表
+        """
+        ...
 
     @property
-    def get(self) -> Getter:
+    def vals(self) -> Getter:
         """返回用于获取元素属性的对象"""
         ...
 
@@ -250,100 +249,146 @@ class ChromiumFilterOne(SessionFilterOne):
         """
         ...
 
-    def __call__(self, index: int = 1) -> ChromiumFilterOne:
-        """返回结果中第几个元素
-        :param index: 元素序号，从1开始
-        :return: 对象自身
+    def __call__(self, tag: Union[str, Ellipsis] = ..., contain_text: Union[str, Ellipsis] = ...,
+                 text_is: Union[str, Ellipsis] = ..., displayed: Union[bool, Ellipsis] = ...,
+                 checked: Union[bool, Ellipsis] = ..., selected: Union[bool, Ellipsis] = ...,
+                 enabled: Union[bool, Ellipsis] = ..., clickable: Union[bool, Ellipsis] = ...,
+                 have_rect: Union[bool, Ellipsis] = ..., equal: bool = True,
+                 index: Union[int, Ellipsis] = 1, **kwargs) -> Union[ChromiumElement, ChromiumFilter]:
+        """或关系筛选元素
+        :param tag: 元素类型，...为忽略该项
+        :param contain_text: 包含文本，...为忽略该项
+        :param text_is: 文本是，...为忽略该项
+        :param displayed: 是否显示，bool，...为忽略该项
+        :param checked: 是否被选中，bool，...为忽略该项
+        :param selected: 是否被选择，bool，...为忽略该项
+        :param enabled: 是否可用，bool，...为忽略该项
+        :param clickable: 是否可点击，bool，...为忽略该项
+        :param have_rect: 是否拥有大小和位置，bool，...为忽略该项
+        :param equal: 匹配还是忽略指定条件
+        :param index: 获取第几个元素，从1开始
+        :return: 元素对象
         """
         ...
 
-    def tag(self, name: str, equal: bool = True) -> SessionElement:
+    def any_of(self, tag: Union[str, Ellipsis] = ..., contain_text: Union[str, Ellipsis] = ...,
+               text_is: Union[str, Ellipsis] = ..., displayed: Union[bool, Ellipsis] = ...,
+               checked: Union[bool, Ellipsis] = ..., selected: Union[bool, Ellipsis] = ...,
+               enabled: Union[bool, Ellipsis] = ..., clickable: Union[bool, Ellipsis] = ...,
+               have_rect: Union[bool, Ellipsis] = ..., equal: bool = True,
+               index: Union[int, Ellipsis] = 1, **kwargs) -> Union[ChromiumElement, ChromiumFilter]:
+        """或关系筛选元素
+        :param tag: 元素类型，...为忽略该项
+        :param contain_text: 包含文本，...为忽略该项
+        :param text_is: 文本是，...为忽略该项
+        :param displayed: 是否显示，bool，...为忽略该项
+        :param checked: 是否被选中，bool，...为忽略该项
+        :param selected: 是否被选择，bool，...为忽略该项
+        :param enabled: 是否可用，bool，...为忽略该项
+        :param clickable: 是否可点击，bool，...为忽略该项
+        :param have_rect: 是否拥有大小和位置，bool，...为忽略该项
+        :param equal: 匹配还是忽略指定条件
+        :param index: 获取第几个元素，从1开始
+        :return: 元素对象
+        """
+        ...
+
+    def tag(self, name: str, equal: bool = True, index: int = 1) -> SessionElement:
         """筛选某种元素
         :param name: 标签页名称
         :param equal: True表示匹配这种元素，False表示匹配非这种元素
+        :param index: 获取结果中第几个元素，1开始
         :return: 筛选结果
         """
         ...
 
-    def attr(self, name: str, value: str, equal: bool = True) -> ChromiumElement:
+    def attr(self, name: str, value: str, equal: bool = True, index: int = 1) -> ChromiumElement:
         """以是否拥有某个attribute值为条件筛选元素
         :param name: 属性名称
         :param value: 属性值
         :param equal: True表示匹配name值为value值的元素，False表示匹配name值不为value值的
+        :param index: 获取结果中第几个元素，1开始
         :return: 筛选结果
         """
         ...
 
-    def text(self,
-             text: str,
-             fuzzy: bool = True,
-             contain: bool = True) -> ChromiumElement:
+    def text(self, text: str, fuzzy: bool = True,
+             contain: bool = True, index: int = 1) -> ChromiumElement:
         """以是否含有指定文本为条件筛选元素
         :param text: 用于匹配的文本
         :param fuzzy: 是否模糊匹配
         :param contain: 是否包含该字符串，False表示不包含
+        :param index: 获取结果中第几个元素，1开始
         :return: 筛选结果
         """
         ...
 
-    def displayed(self, equal: bool = True) -> ChromiumElement:
+    def displayed(self, equal: bool = True, index: int = 1) -> ChromiumElement:
         """以是否显示为条件筛选元素
         :param equal: 是否匹配显示的元素，False匹配不显示的
+        :param index: 获取结果中第几个元素，1开始
         :return: 筛选结果
         """
         ...
 
-    def checked(self, equal: bool = True) -> ChromiumElement:
+    def checked(self, equal: bool = True, index: int = 1) -> ChromiumElement:
         """以是否被选中为条件筛选元素
         :param equal: 是否匹配被选中的元素，False匹配不被选中的
+        :param index: 获取结果中第几个元素，1开始
         :return: 筛选结果
         """
         ...
 
-    def selected(self, equal: bool = True) -> ChromiumElement:
+    def selected(self, equal: bool = True, index: int = 1) -> ChromiumElement:
         """以是否被选择为条件筛选元素，用于<select>元素项目
         :param equal: 是否匹配被选择的元素，False匹配不被选择的
+        :param index: 获取结果中第几个元素，1开始
         :return: 筛选结果
         """
         ...
 
-    def enabled(self, equal: bool = True) -> ChromiumElement:
+    def enabled(self, equal: bool = True, index: int = 1) -> ChromiumElement:
         """以是否可用为条件筛选元素
         :param equal: 是否匹配可用的元素，False表示匹配disabled状态的
+        :param index: 获取结果中第几个元素，1开始
         :return: 筛选结果
         """
         ...
 
-    def clickable(self, equal: bool = True) -> ChromiumElement:
+    def clickable(self, equal: bool = True, index: int = 1) -> ChromiumElement:
         """以是否可点击为条件筛选元素
         :param equal: 是否匹配可点击的元素，False表示匹配不是可点击的
+        :param index: 获取结果中第几个元素，1开始
         :return: 筛选结果
         """
         ...
 
-    def have_rect(self, equal: bool = True) -> ChromiumElement:
+    def have_rect(self, equal: bool = True, index: int = 1) -> ChromiumElement:
         """以是否有大小为条件筛选元素
         :param equal: 是否匹配有大小的元素，False表示匹配没有大小的
+        :param index: 获取结果中第几个元素，1开始
         :return: 筛选结果
         """
         ...
 
-    def style(self, name: str, value: str, equal: bool = True) -> ChromiumElement:
+    def style(self, name: str, value: str, equal: bool = True, index: int = 1) -> ChromiumElement:
         """以是否拥有某个style值为条件筛选元素
         :param name: 属性名称
         :param value: 属性值
         :param equal: True表示匹配name值为value值的元素，False表示匹配name值不为value值的
+        :param index: 获取结果中第几个元素，1开始
         :return: 筛选结果
         """
         ...
 
     def property(self,
                  name: str,
-                 value: str, equal: bool = True) -> ChromiumElement:
+                 value: str, equal: bool = True, index: int = 1) -> ChromiumElement:
         """以是否拥有某个property值为条件筛选元素
         :param name: 属性名称
         :param value: 属性值
         :param equal: True表示匹配name值为value值的元素，False表示匹配name值不为value值的
+        :param index: 获取结果中第几个元素，1开始
         :return: 筛选结果
         """
         ...
@@ -351,25 +396,28 @@ class ChromiumFilterOne(SessionFilterOne):
     def _get_attr(self,
                   name: str,
                   value: str,
-                  method: str, equal: bool = True) -> ChromiumElement:
+                  method: str, equal: bool = True, index: int = 1) -> ChromiumElement:
         """返回通过某个方法可获得某个值的元素
         :param name: 属性名称
         :param value: 属性值
         :param method: 方法名称
+        :param index: 获取结果中第几个元素，1开始
         :return: 筛选结果
         """
         ...
 
-    def _any_state(self, name: str, equal: bool = True) -> ChromiumElement:
+    def _any_state(self, name: str, equal: bool = True, index: int = 1) -> ChromiumElement:
         """
         :param name: 状态名称
         :param equal: 是否是指定状态，False表示否定状态
+        :param index: 获取结果中第几个元素，1开始
         :return: 选中的列表
         """
         ...
 
 
-class ChromiumFilter(ChromiumFilterOne):
+class ChromiumFilter(SessionFilter):
+    _list: ChromiumElementsList = ...
 
     def __iter__(self) -> Iterable[ChromiumElement]: ...
 
@@ -377,11 +425,50 @@ class ChromiumFilter(ChromiumFilterOne):
 
     def __len__(self) -> int: ...
 
-    def __getitem__(self, item: int) -> ChromiumElement: ...
+    def __getitem__(self, item: Union[int, slice]) -> Union[ChromiumElement, ChromiumFilter]: ...
 
-    @property
-    def get(self) -> Getter:
-        """返回用于获取元素属性的对象"""
+    def __call__(self, tag: Union[str, Ellipsis] = ..., contain_text: Union[str, Ellipsis] = ...,
+                 text_is: Union[str, Ellipsis] = ..., displayed: Union[bool, Ellipsis] = ...,
+                 checked: Union[bool, Ellipsis] = ..., selected: Union[bool, Ellipsis] = ...,
+                 enabled: Union[bool, Ellipsis] = ..., clickable: Union[bool, Ellipsis] = ...,
+                 have_rect: Union[bool, Ellipsis] = ..., equal: bool = True,
+                 index: Union[int, Ellipsis] = ..., **kwargs) -> Union[ChromiumElement, ChromiumFilter]:
+        """或关系筛选元素
+        :param tag: 元素类型，...为忽略该项
+        :param contain_text: 包含文本，...为忽略该项
+        :param text_is: 文本是，...为忽略该项
+        :param displayed: 是否显示，bool，...为忽略该项
+        :param checked: 是否被选中，bool，...为忽略该项
+        :param selected: 是否被选择，bool，...为忽略该项
+        :param enabled: 是否可用，bool，...为忽略该项
+        :param clickable: 是否可点击，bool，...为忽略该项
+        :param have_rect: 是否拥有大小和位置，bool，...为忽略该项
+        :param equal: 匹配还是忽略指定条件
+        :param index: 获取第几个元素，非int时返回所有元素组成的列表
+        :return: index为int时返回元素对象，否则返回元素列表
+        """
+        ...
+
+    def any_of(self, tag: Union[str, Ellipsis] = ..., contain_text: Union[str, Ellipsis] = ...,
+               text_is: Union[str, Ellipsis] = ..., displayed: Union[bool, Ellipsis] = ...,
+               checked: Union[bool, Ellipsis] = ..., selected: Union[bool, Ellipsis] = ...,
+               enabled: Union[bool, Ellipsis] = ..., clickable: Union[bool, Ellipsis] = ...,
+               have_rect: Union[bool, Ellipsis] = ..., equal: bool = True,
+               index: Union[int, Ellipsis] = ..., **kwargs) -> Union[ChromiumElement, ChromiumFilter]:
+        """或关系筛选元素
+        :param tag: 元素类型，...为忽略该项
+        :param contain_text: 包含文本，...为忽略该项
+        :param text_is: 文本是，...为忽略该项
+        :param displayed: 是否显示，bool，...为忽略该项
+        :param checked: 是否被选中，bool，...为忽略该项
+        :param selected: 是否被选择，bool，...为忽略该项
+        :param enabled: 是否可用，bool，...为忽略该项
+        :param clickable: 是否可点击，bool，...为忽略该项
+        :param have_rect: 是否拥有大小和位置，bool，...为忽略该项
+        :param equal: 匹配还是忽略指定条件
+        :param index: 获取第几个元素，非int时返回所有元素组成的列表
+        :return: index为int时返回元素对象，否则返回元素列表
+        """
         ...
 
     def tag(self, name: str, equal: bool = True) -> ChromiumFilter:
@@ -461,8 +548,7 @@ class ChromiumFilter(ChromiumFilterOne):
         """
         ...
 
-    def property(self,
-                 name: str,
+    def property(self, name: str,
                  value: str, equal: bool = True) -> ChromiumFilter:
         """以是否拥有某个property值为条件筛选元素
         :param name: 属性名称
@@ -472,55 +558,7 @@ class ChromiumFilter(ChromiumFilterOne):
         """
         ...
 
-    def search_one(self,
-                   index: int = 1,
-                   displayed: Optional[bool] = None,
-                   checked: Optional[bool] = None,
-                   selected: Optional[bool] = None,
-                   enabled: Optional[bool] = None,
-                   clickable: Optional[bool] = None,
-                   have_rect: Optional[bool] = None,
-                   have_text: Optional[bool] = None,
-                   tag: str = None) -> ChromiumElement:
-        """或关系筛选元素，获取一个结果
-        :param index: 元素序号，从1开始
-        :param displayed: 是否显示，bool，None为忽略该项
-        :param checked: 是否被选中，bool，None为忽略该项
-        :param selected: 是否被选择，bool，None为忽略该项
-        :param enabled: 是否可用，bool，None为忽略该项
-        :param clickable: 是否可点击，bool，None为忽略该项
-        :param have_rect: 是否拥有大小和位置，bool，None为忽略该项
-        :param have_text: 是否含有文本，bool，None为忽略该项
-        :param tag: 指定的元素类型
-        :return: 筛选结果
-        """
-        ...
-
-    def search(self,
-               displayed: Optional[bool] = None,
-               checked: Optional[bool] = None,
-               selected: Optional[bool] = None,
-               enabled: Optional[bool] = None,
-               clickable: Optional[bool] = None,
-               have_rect: Optional[bool] = None,
-               have_text: Optional[bool] = None,
-               tag: str = None) -> ChromiumFilter:
-        """或关系筛选元素
-        :param displayed: 是否显示，bool，None为忽略该项
-        :param checked: 是否被选中，bool，None为忽略该项
-        :param selected: 是否被选择，bool，None为忽略该项
-        :param enabled: 是否可用，bool，None为忽略该项
-        :param clickable: 是否可点击，bool，None为忽略该项
-        :param have_rect: 是否拥有大小和位置，bool，None为忽略该项
-        :param have_text: 是否含有文本，bool，None为忽略该项
-        :param tag: 指定的元素类型
-        :return: 筛选结果
-        """
-        ...
-
-    def _get_attr(self,
-                  name: str,
-                  value: str,
+    def _get_attr(self, name: str, value: str,
                   method: str, equal: bool = True) -> ChromiumFilter:
         """返回通过某个方法可获得某个值的元素
         :param name: 属性名称
@@ -540,9 +578,9 @@ class ChromiumFilter(ChromiumFilterOne):
 
 
 class Getter(object):
-    _list: SessionElementsList = ...
+    _list: Union[SessionElementsList, ChromiumElementsList] = ...
 
-    def __init__(self, _list: SessionElementsList):
+    def __init__(self, _list: Union[SessionElementsList, ChromiumElementsList]):
         """
         :param _list: 元素列表对象
         """
@@ -589,5 +627,44 @@ def get_frame(owner: BaseParser,
     :param loc_ind_ele: 定位符、iframe序号、ChromiumFrame对象，序号从1开始，可传入负数获取倒数第几个
     :param timeout: 查找元素超时时间（秒）
     :return: ChromiumFrame对象
+    """
+    ...
+
+
+def any_of_s(_list: SessionElementsList, tag: Union[str, Ellipsis] = ..., contain_text: Union[str, Ellipsis] = ...,
+             text_is: Union[str, Ellipsis] = ..., equal: bool = True, index: Union[int, Ellipsis] = ...,
+             **kwargs) -> Union[SessionElement, SessionFilter]:
+    """或关系筛选元素
+    :param _list: 元素列表
+    :param tag: 元素类型，...为忽略该项
+    :param contain_text: 包含文本，...为忽略该项
+    :param text_is: 文本是，...为忽略该项
+    :param equal: 匹配还是忽略指定条件
+    :param index: 获取第几个元素，从1开始，非int时返回所有元素组成的列表
+    :return: index为int时返回元素对象，否则返回元素列表
+    """
+    ...
+
+
+def any_of_c(_list: ChromiumElementsList, tag: Union[str, Ellipsis] = ..., contain_text: Union[str, Ellipsis] = ...,
+             text_is: Union[str, Ellipsis] = ..., displayed: Union[bool, Ellipsis] = ...,
+             checked: Union[bool, Ellipsis] = ..., selected: Union[bool, Ellipsis] = ...,
+             enabled: Union[bool, Ellipsis] = ..., clickable: Union[bool, Ellipsis] = ...,
+             have_rect: Union[bool, Ellipsis] = ..., equal: bool = True,
+             index: Union[int, Ellipsis] = ..., **kwargs) -> Union[ChromiumElement, ChromiumFilter]:
+    """或关系筛选元素
+    :param _list: 元素列表
+    :param tag: 元素类型，...为忽略该项
+    :param contain_text: 包含文本，...为忽略该项
+    :param text_is: 文本是，...为忽略该项
+    :param displayed: 是否显示，bool，...为忽略该项
+    :param checked: 是否被选中，bool，...为忽略该项
+    :param selected: 是否被选择，bool，...为忽略该项
+    :param enabled: 是否可用，bool，...为忽略该项
+    :param clickable: 是否可点击，bool，...为忽略该项
+    :param have_rect: 是否拥有大小和位置，bool，...为忽略该项
+    :param equal: 匹配还是忽略指定条件
+    :param index: 获取第几个元素，从1开始，非int时返回所有元素组成的列表
+    :return: index为int时返回元素对象，否则返回元素列表
     """
     ...

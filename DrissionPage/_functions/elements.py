@@ -27,7 +27,7 @@ class SessionElementsList(list):
             raise ValueError(_S._lang.joinn(_S._lang.INDEX_FORMAT, CURR_VAL=item))
 
     @property
-    def get(self):
+    def vals(self):
         return Getter(self)
 
     @property
@@ -37,16 +37,6 @@ class SessionElementsList(list):
     @property
     def filter_one(self):
         return SessionFilterOne(self)
-
-    @property
-    def texts(self):
-        texts = []
-        for t in self:
-            if hasattr(t, 'text'):
-                texts.append(t.text)
-            elif isinstance(t, str):
-                texts.append(t)
-        return texts
 
 
 class ChromiumElementsList(SessionElementsList):
@@ -59,84 +49,80 @@ class ChromiumElementsList(SessionElementsList):
     def filter_one(self):
         return ChromiumFilterOne(self)
 
-    def search(self, displayed=None, checked=None, selected=None, enabled=None, clickable=None,
-               have_rect=None, have_text=None, tag=None):
-        return _search(self, displayed=displayed, checked=checked, selected=selected, enabled=enabled,
-                       clickable=clickable, have_rect=have_rect, have_text=have_text, tag=tag)
-
-    def search_one(self, index=1, displayed=None, checked=None, selected=None, enabled=None, clickable=None,
-                   have_rect=None, have_text=None, tag=None):
-        return _search_one(self, index=index, displayed=displayed, checked=checked, selected=selected,
-                           enabled=enabled, clickable=clickable, have_rect=have_rect, have_text=have_text, tag=tag)
-
 
 class SessionFilterOne(object):
     def __init__(self, _list):
         self._list = _list
-        self._index = 1
 
-    def __call__(self, index=1):
-        self._index = index
-        return self
+    def __call__(self, tag=..., contain_text=..., text_is=..., equal=True, index=1, **kwargs):
+        return self.any_of(tag=tag, contain_text=contain_text, text_is=text_is, equal=equal, index=index, **kwargs)
 
-    def tag(self, name, equal=True):
+    def any_of(self, tag=..., contain_text=..., text_is=..., equal=True, index=1, **kwargs):
+        return any_of_s(self._list, tag=tag, contain_text=contain_text, text_is=text_is, equal=equal, index=index,
+                        **kwargs)
+
+    def tag(self, name, equal=True, index=1):
         num = 0
         name = name.lower()
         if equal:
             for i in self._list:
                 if not isinstance(i, str) and i.tag == name:
                     num += 1
-                    if self._index == num:
+                    if index == num:
                         return i
         else:
             for i in self._list:
                 if not isinstance(i, str) and i.tag != name:
                     num += 1
-                    if self._index == num:
+                    if index == num:
                         return i
-        return NoneElement(self._list._owner, 'tag()', args={'name': name, 'equal': equal, 'index': self._index})
+        return NoneElement(self._list._owner, 'filter.tag()', args={'name': name, 'equal': equal, 'index': index})
 
-    def attr(self, name, value, equal=True):
-        return self._get_attr(name, value, 'attr', equal=equal)
-
-    def text(self, text, fuzzy=True, contain=True):
+    def text(self, text, fuzzy=True, contain=True, index=1):
         num = 0
         if contain:
             for i in self._list:
                 t = i if isinstance(i, str) else i.raw_text
                 if (fuzzy and text in t) or (not fuzzy and text == t):
                     num += 1
-                    if self._index == num:
+                    if index == num:
                         return i
         else:
             for i in self._list:
                 t = i if isinstance(i, str) else i.raw_text
                 if (fuzzy and text not in t) or (not fuzzy and text != t):
                     num += 1
-                    if self._index == num:
+                    if index == num:
                         return i
-        return NoneElement(self._list._owner, 'text()',
-                           args={'text': text, 'fuzzy': fuzzy, 'contain': contain, 'index': self._index})
+        return NoneElement(self._list._owner, 'filter.text()',
+                           args={'text': text, 'fuzzy': fuzzy, 'contain': contain, 'index': index})
 
-    def _get_attr(self, name, value, method, equal=True):
+    def attr(self, name, value, equal=True, index=1):
+        return self._get_attr(name, value, 'attr', equal=equal, index=index)
+
+    def _get_attr(self, name, value, method, equal=True, index=1):
         num = 0
         if equal:
             for i in self._list:
                 if not isinstance(i, str) and getattr(i, method)(name) == value:
                     num += 1
-                    if self._index == num:
+                    if index == num:
                         return i
         else:
             for i in self._list:
                 if not isinstance(i, str) and getattr(i, method)(name) != value:
                     num += 1
-                    if self._index == num:
+                    if index == num:
                         return i
-        return NoneElement(self._list._owner, f'{method}()',
-                           args={'name': name, 'value': value, 'equal': equal, 'index': self._index})
+        return NoneElement(self._list._owner, f'filter.{method}()',
+                           args={'name': name, 'value': value, 'equal': equal, 'index': index})
 
 
-class SessionFilter(SessionFilterOne):
+class SessionFilter(object):
+    _LIST_CLASS = SessionElementsList
+
+    def __init__(self, _list):
+        self._list = _list
 
     def __iter__(self):
         return iter(self._list)
@@ -148,28 +134,112 @@ class SessionFilter(SessionFilterOne):
         return len(self._list)
 
     def __getitem__(self, item):
-        return self._list[item]
+        if isinstance(item, slice):
+            return SessionFilter(self._list[item.start: item.stop: item.step])
+        elif isinstance(item, int):
+            return self._list[item]
+        else:
+            raise ValueError(_S._lang.joinn(_S._lang.INDEX_FORMAT, CURR_VAL=item))
+
+    def __repr__(self):
+        return str(self._list)
+
+    def __call__(self, tag=..., contain_text=..., text_is=..., equal=True, index=..., **kwargs):
+        return self.any_of(tag=tag, contain_text=contain_text, text_is=text_is, equal=equal, **kwargs)
+
+    def any_of(self, tag=..., contain_text=..., text_is=..., equal=True, index=..., **kwargs):
+        return any_of_s(self._list, tag=tag, contain_text=contain_text, text_is=text_is, equal=equal, **kwargs)
 
     @property
-    def get(self):
-        return self._list.get
+    def vals(self):
+        return self._list.vals
 
     def tag(self, name, equal=True):
-        self._list = _tag_all(self._list, SessionElementsList(owner=self._list._owner), name=name, equal=equal)
+        self._list = _tag_all(self._list, self._LIST_CLASS(owner=self._list._owner), name=name, equal=equal)
+        return self
+
+    def attr(self, name, value, equal=True):
+        self._list = _attr_all(self._list, self._LIST_CLASS(owner=self._list._owner),
+                               name=name, value=value, method='attr', equal=equal)
         return self
 
     def text(self, text, fuzzy=True, contain=True):
-        self._list = _text_all(self._list, SessionElementsList(owner=self._list._owner),
+        self._list = _text_all(self._list, self._LIST_CLASS(owner=self._list._owner),
                                text=text, fuzzy=fuzzy, contain=contain)
-        return self
-
-    def _get_attr(self, name, value, method, equal=True):
-        self._list = _attr_all(self._list, SessionElementsList(owner=self._list._owner),
-                               name=name, value=value, method=method, equal=equal)
         return self
 
 
 class ChromiumFilterOne(SessionFilterOne):
+
+    def displayed(self, equal=True, index=1):
+        return self._any_state('is_displayed', equal=equal, index=index)
+
+    def checked(self, equal=True, index=1):
+        return self._any_state('is_checked', equal=equal, index=index)
+
+    def selected(self, equal=True, index=1):
+        return self._any_state('is_selected', equal=equal, index=index)
+
+    def enabled(self, equal=True, index=1):
+        return self._any_state('is_enabled', equal=equal, index=index)
+
+    def clickable(self, equal=True, index=1):
+        return self._any_state('is_clickable', equal=equal, index=index)
+
+    def have_rect(self, equal=True, index=1):
+        return self._any_state('has_rect', equal=equal, index=index)
+
+    def style(self, name, value, equal=True, index=1):
+        return self._get_attr(name, value, 'style', equal=equal, index=index)
+
+    def property(self, name, value, equal=True, index=1):
+        return self._get_attr(name, value, 'property', equal=equal, index=index)
+
+    def _any_state(self, name, equal=True, index=1):
+        num = 0
+        if equal:
+            for i in self._list:
+                if not isinstance(i, str) and getattr(i.states, name):
+                    num += 1
+                    if index == num:
+                        return i
+        else:
+            for i in self._list:
+                if not isinstance(i, str) and not getattr(i.states, name):
+                    num += 1
+                    if index == num:
+                        return i
+        return NoneElement(self._list._owner, f'{name}()', args={'equal': equal, 'index': index})
+
+    def any_of(self, tag=..., contain_text=..., text_is=..., displayed=..., checked=..., selected=..., enabled=...,
+               clickable=..., have_rect=..., equal=True, index=1, **kwargs):
+        return any_of_c(self._list, tag=tag, contain_text=contain_text, text_is=text_is, displayed=displayed,
+                        checked=checked, selected=selected, enabled=enabled, clickable=clickable, have_rect=have_rect,
+                        equal=equal, index=index, **kwargs)
+
+
+class ChromiumFilter(SessionFilter):
+    _LIST_CLASS = ChromiumElementsList
+
+    def __getitem__(self, item):
+        if isinstance(item, slice):
+            return ChromiumFilter(self._list[item.start: item.stop: item.step])
+        elif isinstance(item, int):
+            return self._list[item]
+        else:
+            raise ValueError(_S._lang.joinn(_S._lang.INDEX_FORMAT, CURR_VAL=item))
+
+    def __call__(self, tag=..., contain_text=..., text_is=..., displayed=None, checked=None, selected=None,
+                 enabled=None, clickable=None, have_rect=None, equal=True, index=..., **kwargs):
+        return any_of_c(self._list, tag=tag, contain_text=contain_text, text_is=text_is, displayed=displayed,
+                        checked=checked, selected=selected, enabled=enabled, clickable=clickable, have_rect=have_rect,
+                        equal=equal, index=index, **kwargs)
+
+    def any_of(self, tag=..., contain_text=..., text_is=..., displayed=None, checked=None, selected=None, enabled=None,
+               clickable=None, have_rect=None, equal=True, index=..., **kwargs):
+        return any_of_c(self._list, tag=tag, contain_text=contain_text, text_is=text_is, displayed=displayed,
+                        checked=checked, selected=selected, enabled=enabled, clickable=clickable, have_rect=have_rect,
+                        equal=equal, index=index, **kwargs)
 
     def displayed(self, equal=True):
         return self._any_state('is_displayed', equal=equal)
@@ -196,65 +266,6 @@ class ChromiumFilterOne(SessionFilterOne):
         return self._get_attr(name, value, 'property', equal=equal)
 
     def _any_state(self, name, equal=True):
-        num = 0
-        if equal:
-            for i in self._list:
-                if not isinstance(i, str) and getattr(i.states, name):
-                    num += 1
-                    if self._index == num:
-                        return i
-        else:
-            for i in self._list:
-                if not isinstance(i, str) and not getattr(i.states, name):
-                    num += 1
-                    if self._index == num:
-                        return i
-        return NoneElement(self._list._owner, f'{name}()', args={'equal': equal, 'index': self._index})
-
-
-class ChromiumFilter(ChromiumFilterOne):
-
-    def __iter__(self):
-        return iter(self._list)
-
-    def __next__(self):
-        return next(self._list)
-
-    def __len__(self):
-        return len(self._list)
-
-    def __getitem__(self, item):
-        return self._list[item]
-
-    @property
-    def get(self):
-        return self._list.get
-
-    def search_one(self, index=1, displayed=None, checked=None, selected=None, enabled=None, clickable=None,
-                   have_rect=None, have_text=None, tag=None):
-        return _search_one(self._list, index=index, displayed=displayed, checked=checked, selected=selected,
-                           enabled=enabled, clickable=clickable, have_rect=have_rect, have_text=have_text, tag=tag)
-
-    def search(self, displayed=None, checked=None, selected=None, enabled=None, clickable=None,
-               have_rect=None, have_text=None, tag=None):
-        return _search(self._list, displayed=displayed, checked=checked, selected=selected, enabled=enabled,
-                       clickable=clickable, have_rect=have_rect, have_text=have_text, tag=tag)
-
-    def tag(self, name, equal=True):
-        self._list = _tag_all(self._list, ChromiumElementsList(owner=self._list._owner), name=name, equal=equal)
-        return self
-
-    def text(self, text, fuzzy=True, contain=True):
-        self._list = _text_all(self._list, ChromiumElementsList(owner=self._list._owner),
-                               text=text, fuzzy=fuzzy, contain=contain)
-        return self
-
-    def _get_attr(self, name, value, method, equal=True):
-        self._list = _attr_all(self._list, ChromiumElementsList(owner=self._list._owner),
-                               name=name, value=value, method=method, equal=equal)
-        return self
-
-    def _any_state(self, name, equal=True):
         r = ChromiumElementsList(owner=self._list._owner)
         if equal:
             for i in self._list:
@@ -276,7 +287,13 @@ class Getter(object):
         return [e.link for e in self._list if not isinstance(e, str)]
 
     def texts(self):
-        return [e if isinstance(e, str) else e.text for e in self._list]
+        texts = []
+        for t in self._list:
+            if hasattr(t, 'text'):
+                texts.append(t.text)
+            elif isinstance(t, str):
+                texts.append(t)
+        return texts
 
     def attrs(self, name):
         return [e.attr(name) for e in self._list if not isinstance(e, str)]
@@ -381,78 +398,195 @@ def _text_all(src_list, aim_list, text, fuzzy=True, contain=True):
     return aim_list
 
 
-def _search(_list, displayed=None, checked=None, selected=None, enabled=None, clickable=None,
-            have_rect=None, have_text=None, tag=None):
-    """或关系筛选元素
-    :param displayed: 是否显示，bool，None为忽略该项
-    :param checked: 是否被选中，bool，None为忽略该项
-    :param selected: 是否被选择，bool，None为忽略该项
-    :param enabled: 是否可用，bool，None为忽略该项
-    :param clickable: 是否可点击，bool，None为忽略该项
-    :param have_rect: 是否拥有大小和位置，bool，None为忽略该项
-    :param have_text: 是否含有文本，bool，None为忽略该项
-    :param tag: 元素类型
-    :return: 筛选结果
-    """
+def any_of_s(_list, tag=..., contain_text=..., text_is=..., equal=True, index=..., **kwargs):
+    if isinstance(index, int):
+        if index == 0:
+            index = 1
+        elif index < 0:
+            _list = _list[::-1]
+            index = abs(index)
+        num = 0
+        if equal:
+            for i in _list:
+                if isinstance(i, str):
+                    continue
+                if ((tag is not Ellipsis and i.tag == tag.lower())
+                        or (contain_text is not Ellipsis and i.text and contain_text in i.text)
+                        or (text_is is not Ellipsis and text_is == i.text)):
+                    num += 1
+                else:
+                    for attr, val in kwargs.items():
+                        if i.attrs.get(attr) == val:
+                            num += 1
+                            break
+                if num == index:
+                    return i
+        else:
+            for i in _list:
+                if isinstance(i, str):
+                    continue
+                if ((tag is not Ellipsis and i.tag != tag.lower())
+                        or (contain_text is not Ellipsis and (not i.text or contain_text not in i.text))
+                        or (text_is is not Ellipsis and text_is != i.text)):
+                    num += 1
+                else:
+                    for attr, val in kwargs.items():
+                        if i.attrs.get(attr) != val:
+                            num += 1
+                            break
+                if num == index:
+                    return i
+
+        return NoneElement(_list._owner, method='filter.any_of()', args={'tag': tag, 'contain_text': contain_text,
+                                                                         'text_is': text_is, 'equal': equal,
+                                                                         'index': index, **kwargs})
+    r = SessionElementsList(owner=_list._owner)
+    if equal:
+        for i in _list:
+            if isinstance(i, str):
+                continue
+            if ((tag is not Ellipsis and i.tag == tag.lower())
+                    or (contain_text is not Ellipsis and i.text and contain_text in i.text)
+                    or (text_is is not Ellipsis and text_is == i.text)):
+                r.append(i)
+            else:
+                for attr, val in kwargs.items():
+                    if i.attrs.get(attr) == val:
+                        r.append(i)
+                        break
+    else:
+        for i in _list:
+            if isinstance(i, str):
+                continue
+            if ((tag is not Ellipsis and i.tag != tag.lower())
+                    or (contain_text is not Ellipsis and (not i.text or contain_text not in i.text))
+                    or (text_is is not Ellipsis and text_is != i.text)):
+                r.append(i)
+            else:
+                for attr, val in kwargs.items():
+                    if i.attrs.get(attr) != val:
+                        r.append(i)
+                        break
+    return SessionFilter(r)
+
+
+def any_of_c(_list, tag=..., contain_text=..., text_is=..., displayed=..., checked=..., selected=..., enabled=...,
+             clickable=..., have_rect=..., equal=True, index=..., **kwargs):
+    if isinstance(index, int):
+        if index == 0:
+            index = 1
+        elif index < 0:
+            _list = _list[::-1]
+            index = abs(index)
+        num = 0
+        if equal:
+            for i in _list:
+                if isinstance(i, str):
+                    continue
+                if ((tag is not Ellipsis and i.tag == tag.lower())
+                        or (contain_text is not Ellipsis and i.text and contain_text in i.text)
+                        or (text_is is not Ellipsis and text_is == i.text)
+                        or (displayed is not Ellipsis and (displayed is True and i.states.is_displayed)
+                            or (displayed is False and not i.states.is_displayed))
+                        or (checked is not Ellipsis and (checked is True and i.states.is_checked)
+                            or (checked is False and not i.states.is_checked))
+                        or (selected is not Ellipsis and (selected is True and i.states.is_selected)
+                            or (selected is False and not i.states.is_selected))
+                        or (enabled is not Ellipsis and (enabled is True and i.states.is_enabled)
+                            or (enabled is False and not i.states.is_enabled))
+                        or (clickable is not Ellipsis and (clickable is True and i.states.is_clickable)
+                            or (clickable is False and not i.states.is_clickable))
+                        or (have_rect is not Ellipsis and (have_rect is True and i.states.has_rect)
+                            or (have_rect is False and not i.states.has_rect))):
+                    num += 1
+                else:
+                    for attr, val in kwargs.items():
+                        if i.attrs.get(attr) == val:
+                            num += 1
+                            break
+                if num == index:
+                    return i
+        else:
+            for i in _list:
+                if isinstance(i, str):
+                    continue
+                if ((tag is not Ellipsis and i.tag != tag.lower())
+                        or (contain_text is not Ellipsis and (not i.text or contain_text not in i.text))
+                        or (text_is is not Ellipsis and text_is != i.text)
+                        or (displayed is not Ellipsis and (displayed is False and i.states.is_displayed)
+                            or (displayed is True and not i.states.is_displayed))
+                        or (checked is not Ellipsis and (checked is False and i.states.is_checked)
+                            or (checked is True and not i.states.is_checked))
+                        or (selected is not Ellipsis and (selected is False and i.states.is_selected)
+                            or (selected is True and not i.states.is_selected))
+                        or (enabled is not Ellipsis and (enabled is False and i.states.is_enabled)
+                            or (enabled is True and not i.states.is_enabled))
+                        or (clickable is not Ellipsis and (clickable is False and i.states.is_clickable)
+                            or (clickable is True and not i.states.is_clickable))
+                        or (have_rect is not Ellipsis and (have_rect is False and i.states.has_rect)
+                            or (have_rect is True and not i.states.has_rect))):
+                    num += 1
+                else:
+                    for attr, val in kwargs.items():
+                        if i.attrs.get(attr) != val:
+                            num += 1
+                            break
+                if num == index:
+                    return i
+
+        return NoneElement(_list._owner, method='filter.any_of()', args={'tag': tag, 'contain_text': contain_text,
+                                                                         'text_is': text_is, 'equal': equal,
+                                                                         'index': index, **kwargs})
+
     r = ChromiumElementsList(owner=_list._owner)
-    for i in _list:
-        if not isinstance(i, str) and (
-                (displayed is not None and (displayed is True and i.states.is_displayed)
-                 or (displayed is False and not i.states.is_displayed))
-                or (checked is not None and (checked is True and i.states.is_checked)
-                    or (checked is False and not i.states.is_checked))
-                or (selected is not None and (selected is True and i.states.is_selected)
-                    or (selected is False and not i.states.is_selected))
-                or (enabled is not None and (enabled is True and i.states.is_enabled)
-                    or (enabled is False and not i.states.is_enabled))
-                or (clickable is not None and (clickable is True and i.states.is_clickable)
-                    or (clickable is False and not i.states.is_clickable))
-                or (have_rect is not None and (have_rect is True and i.states.has_rect)
-                    or (have_rect is False and not i.states.has_rect))
-                or (have_text is not None and (have_text is True and i.raw_text)
-                    or (have_text is False and not i.raw_text))
-                or (tag is not None and i.tag == tag.lower())):
-            r.append(i)
+    if equal:
+        for i in _list:
+            if isinstance(i, str):
+                continue
+            if ((tag is not Ellipsis and i.tag == tag.lower())
+                    or (contain_text is not Ellipsis and i.text and contain_text in i.text)
+                    or (text_is is not Ellipsis and text_is == i.text)
+                    or (displayed is not Ellipsis and (displayed is True and i.states.is_displayed)
+                        or (displayed is False and not i.states.is_displayed))
+                    or (checked is not Ellipsis and (checked is True and i.states.is_checked)
+                        or (checked is False and not i.states.is_checked))
+                    or (selected is not Ellipsis and (selected is True and i.states.is_selected)
+                        or (selected is False and not i.states.is_selected))
+                    or (enabled is not Ellipsis and (enabled is True and i.states.is_enabled)
+                        or (enabled is False and not i.states.is_enabled))
+                    or (clickable is not Ellipsis and (clickable is True and i.states.is_clickable)
+                        or (clickable is False and not i.states.is_clickable))
+                    or (have_rect is not Ellipsis and (have_rect is True and i.states.has_rect)
+                        or (have_rect is False and not i.states.has_rect))):
+                r.append(i)
+            else:
+                for attr, val in kwargs.items():
+                    if i.attrs.get(attr) == val:
+                        r.append(i)
+                        break
+    else:
+        for i in _list:
+            if isinstance(i, str):
+                continue
+            if ((tag is not Ellipsis and i.tag != tag.lower())
+                    or (contain_text is not Ellipsis and (not i.text or contain_text not in i.text))
+                    or (text_is is not Ellipsis and text_is != i.text)
+                    or (displayed is not Ellipsis and (displayed is False and i.states.is_displayed)
+                        or (displayed is True and not i.states.is_displayed))
+                    or (checked is not Ellipsis and (checked is False and i.states.is_checked)
+                        or (checked is True and not i.states.is_checked))
+                    or (selected is not Ellipsis and (selected is False and i.states.is_selected)
+                        or (selected is True and not i.states.is_selected))
+                    or (enabled is not Ellipsis and (enabled is False and i.states.is_enabled)
+                        or (enabled is True and not i.states.is_enabled))
+                    or (clickable is not Ellipsis and (clickable is False and i.states.is_clickable)
+                        or (clickable is True and not i.states.is_clickable))
+                    or (have_rect is not Ellipsis and (have_rect is False and i.states.has_rect)
+                        or (have_rect is True and not i.states.has_rect))):
+                r.append(i)
+            else:
+                for attr, val in kwargs.items():
+                    if i.attrs.get(attr) != val:
+                        r.append(i)
+                        break
     return ChromiumFilter(r)
-
-
-def _search_one(_list, index=1, displayed=None, checked=None, selected=None, enabled=None, clickable=None,
-                have_rect=None, have_text=None, tag=None):
-    """或关系筛选元素，获取一个结果
-    :param index: 元素序号，从1开始
-    :param displayed: 是否显示，bool，None为忽略该项
-    :param checked: 是否被选中，bool，None为忽略该项
-    :param selected: 是否被选择，bool，None为忽略该项
-    :param enabled: 是否可用，bool，None为忽略该项
-    :param clickable: 是否可点击，bool，None为忽略该项
-    :param have_rect: 是否拥有大小和位置，bool，None为忽略该项
-    :param have_text: 是否含有文本，bool，None为忽略该项
-    :param tag: 元素类型
-    :return: 筛选结果
-    """
-    num = 0
-    for i in _list:
-        if not isinstance(i, str) and (
-                (displayed is not None and (displayed is True and i.states.is_displayed)
-                 or (displayed is False and not i.states.is_displayed))
-                or (checked is not None and (checked is True and i.states.is_checked)
-                    or (checked is False and not i.states.is_checked))
-                or (selected is not None and (selected is True and i.states.is_selected)
-                    or (selected is False and not i.states.is_selected))
-                or (enabled is not None and (enabled is True and i.states.is_enabled)
-                    or (enabled is False and not i.states.is_enabled))
-                or (clickable is not None and (clickable is True and i.states.is_clickable)
-                    or (clickable is False and not i.states.is_clickable))
-                or (have_rect is not None and (have_rect is True and i.states.has_rect)
-                    or (have_rect is False and not i.states.has_rect))
-                or (have_text is not None and (have_text is True and i.raw_text)
-                    or (have_text is False and not i.raw_text))
-                or (tag is not None and i.tag == tag.lower())):
-            num += 1
-            if num == index:
-                return i
-
-    return NoneElement(_list._owner, method='filter()', args={'displayed': displayed, 'checked': checked,
-                                                              'selected': selected, 'enabled': enabled,
-                                                              'clickable': clickable, 'have_rect': have_rect,
-                                                              'have_text': have_text, 'tag': tag})
